@@ -34,26 +34,12 @@ const participantData = async (req, res) => {
         let category = await Category.findOne({
             name: competition.toLowerCase(),
         });
+
         if (!category) {
             category = new Category({ name: competition.toLowerCase() });
             await category.save();
         }
 
-        // // ✅ Ensure Subcategory exists (create if not found)
-        // let subcategory = await Subcategory.findOne({
-        //     group: group,
-        //     categoryId: category._id
-        // });
-        // if (!subcategory) {
-        //     subcategory = new Subcategory({
-        //         name: group, // Using group as the name since it represents Junior/Senior/Expert
-        //         categoryId: category._id,
-        //         group: group
-        //     });
-        //     await subcategory.save();
-        // }
-
-        // ✅ Ensure Subcategory exists (create if not found)
         let subcategory = await Subcategory.findOne({
             group: group,
             categoryId: category._id
@@ -81,10 +67,6 @@ const participantData = async (req, res) => {
             await subcategory.save();
         }
 
-
-        // console.log("category data", category._id);
-        // console.log("subcategory data", subcategory._id);
-
         // **Check Gender Restriction for Turban**
         if (gender === "Female" && category.name.toLowerCase() === "turban") {
             return res.status(400).json({
@@ -95,6 +77,8 @@ const participantData = async (req, res) => {
 
         // **Check Age Restrictions for Subcategories**
         const subcategoryGroup = subcategory.group.toLowerCase();
+        console.log("subcategory", subcategoryGroup);
+        console.log("age", typeof age);
 
         if (
             age >= 5 &&
@@ -108,7 +92,7 @@ const participantData = async (req, res) => {
             });
         }
 
-        if (age >= 16 && subcategoryGroup === "junior" && subcategoryGroup === "expert") {
+        if (age >= 16 && subcategoryGroup === "junior" || subcategoryGroup === "expert") {
             return res.status(400).json({
                 success: false,
                 message: "Participants aged 15+ are not eligible for Junior and Expert group",
