@@ -92,13 +92,13 @@ const participantData = async (req, res) => {
             });
         }
 
-        if (age >= 16 && subcategoryGroup === "junior" || subcategoryGroup === "expert") {
+        if (age >= 16 && subcategoryGroup === "junior" ) {
             return res.status(400).json({
                 success: false,
-                message: "Participants aged 15+ are not eligible for Junior and Expert group",
+                message: "Participants aged 15+ are not eligible for Junior group",
             });
         }
-
+    
         // Extract first letters for participant ID
         const firstLetterOfCategory = category.name.charAt(0).toUpperCase();
         const firstLetterOfSubcategory = subcategory.group.charAt(0).toUpperCase();
