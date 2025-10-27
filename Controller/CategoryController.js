@@ -42,11 +42,14 @@ const CreateSubCategory = async (req, res) => {
     try {
         // Check if the category exists
         const category = await Category.findById(categoryId);
+        console.log("Category found:", category);
+        
 
         if (!category) {
             return res.status(400).json({ success: false, message: "Category not found" });
         }
 
+        
         // Check if subcategory already exists under this category
         let subcategory = await Subcategory.findOne({ categoryId, group });
 

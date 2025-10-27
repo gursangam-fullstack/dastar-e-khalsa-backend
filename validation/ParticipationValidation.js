@@ -9,7 +9,7 @@ const participantValidationSchema = z.object({
 
     age: z.coerce.number()
         .int({ message: "Age contains only number" })
-        .min(5, { message: "Minimum age is 5 years" })
+        .min(8, { message: "Minimum age is 8 years" })
         .max(25, { message: "Age above 25 are not eligble for competition" }),
 
     gender: z.enum(["Male", "Female"], { message: "Gender must be 'Male' or 'Female'" }),

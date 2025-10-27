@@ -5,7 +5,7 @@ const Category = require("../Model/CategoryModel");
 
 const participantData = async (req, res) => {
     try {
-        // console.log("Received Data:", req.body);
+        console.log("Received Data:", req.body);
 
         const {
             fullName,
@@ -39,19 +39,48 @@ const participantData = async (req, res) => {
             await category.save();
         }
 
+        // // ✅ Ensure Subcategory exists (create if not found)
+        // let subcategory = await Subcategory.findOne({
+        //     group: group,
+        //     categoryId: category._id
+        // });
+        // if (!subcategory) {
+        //     subcategory = new Subcategory({
+        //         name: group, // Using group as the name since it represents Junior/Senior/Expert
+        //         categoryId: category._id,
+        //         group: group
+        //     });
+        //     await subcategory.save();
+        // }
+
         // ✅ Ensure Subcategory exists (create if not found)
         let subcategory = await Subcategory.findOne({
             group: group,
             categoryId: category._id
         });
+
         if (!subcategory) {
+            // Apply unique name logic ONLY for Dumala
+            let subcategoryName;
+
+            if (category.name.toLowerCase() === "dumala") {
+                // For dumala → make unique name like "junior - dumala"
+                const categoryNameSafe = (category.name || '').toString();
+                subcategoryName = `${group} - ${categoryNameSafe}`;
+            } else {
+                // For all other categories → keep original style
+                subcategoryName = group;
+            }
+
             subcategory = new Subcategory({
-                name: group, // Using group as the name since it represents Junior/Senior/Expert
+                name: subcategoryName,
                 categoryId: category._id,
-                group: group
+                group: group,
             });
+
             await subcategory.save();
         }
+
 
         // console.log("category data", category._id);
         // console.log("subcategory data", subcategory._id);
@@ -75,14 +104,14 @@ const participantData = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message:
-                    "Participants aged 5-15 are not eligible for Senior and Expert groups",
+                    "Participants aged 8-15 are not eligible for Senior and Expert groups",
             });
         }
 
-        if (age >= 16 && subcategoryGroup === "junior") {
+        if (age >= 16 && subcategoryGroup === "junior" && subcategoryGroup === "expert") {
             return res.status(400).json({
                 success: false,
-                message: "Participants aged 15+ are not eligible for Junior group",
+                message: "Participants aged 15+ are not eligible for Junior and Expert group",
             });
         }
 
