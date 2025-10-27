@@ -171,7 +171,7 @@ const participantData = async (req, res) => {
     }
 };
 
-
+// set the logic to fetch all participant details
 // Get All Participants
 const allParticipantDetails = async (req, res) => {
     try {
