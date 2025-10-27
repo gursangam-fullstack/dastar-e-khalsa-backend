@@ -5,7 +5,7 @@ const Category = require("../Model/CategoryModel");
 
 const participantData = async (req, res) => {
     try {
-        console.log("Received Data:", req.body);
+        // console.log("Received Data:", req.body);
 
         const {
             fullName,
@@ -166,7 +166,7 @@ const participantData = async (req, res) => {
             participant: newParticipant,
         });
     } catch (error) {
-        console.error("Error registering participant:", error);
+        // console.error("Error registering participant:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
@@ -178,7 +178,7 @@ const allParticipantDetails = async (req, res) => {
         const participants = await Participant.find();
         res.status(200).json(participants);
     } catch (error) {
-        console.error("Error fetching participants:", error);
+        // console.error("Error fetching participants:", error);
         res.status(500).json({
             success: false,
             message: "Error fetching users",
@@ -199,7 +199,7 @@ const participantDetailsById = async (req, res) => {
         }
         res.status(200).json(participant);
     } catch (error) {
-        console.error("Error fetching participant details:", error);
+        // console.error("Error fetching participant details:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
@@ -215,7 +215,7 @@ const filterParticipantsByCompetition = async (req, res) => {
         const participants = await Participant.find(query);
         res.json(participants);
     } catch (error) {
-        console.error("Error fetching participants:", error);
+        // console.error("Error fetching participants:", error);
         res
             .status(500)
             .json({ message: "An error occurred while fetching participants." });

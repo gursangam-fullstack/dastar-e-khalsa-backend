@@ -21,7 +21,7 @@ const CreateCategory = async (req, res) => {
             category,
         });
     } catch (error) {
-        console.error('Error creating category:', error);
+        // console.error('Error creating category:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 }
@@ -31,7 +31,7 @@ const fetehCategory = async (req, res) => {
         const categories = await Category.find();
         res.status(200).json(categories);
     } catch (error) {
-        console.error("Error fetching categories:", error);
+        // console.error("Error fetching categories:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 }
@@ -42,7 +42,7 @@ const CreateSubCategory = async (req, res) => {
     try {
         // Check if the category exists
         const category = await Category.findById(categoryId);
-        console.log("Category found:", category);
+        // console.log("Category found:", category);
         
 
         if (!category) {
@@ -65,7 +65,7 @@ const CreateSubCategory = async (req, res) => {
             subcategory,
         });
     } catch (error) {
-        console.error('Error creating subcategory:', error);
+        // console.error('Error creating subcategory:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 }
@@ -77,7 +77,7 @@ const fetchSubcategory = async (req, res) => {
 
         res.status(200).json(subcategories);
     } catch (error) {
-        console.error('Error fetching subcategories:', error);
+        // console.error('Error fetching subcategories:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 }
