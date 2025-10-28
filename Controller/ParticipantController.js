@@ -5,7 +5,7 @@ const Category = require("../Model/CategoryModel");
 
 const participantData = async (req, res) => {
     try {
-        console.log("Received Data:", req.body);
+        // console.log("Received Data:", req.body);
 
         const {
             fullName,
@@ -154,7 +154,7 @@ const participantData = async (req, res) => {
             participant: newParticipant,
         });
     } catch (error) {
-        console.log("Error registering participant:", error);
+        // console.log("Error registering participant:", error);
         res.status(500).json({
             success: false,
             message: "Internal server error",
