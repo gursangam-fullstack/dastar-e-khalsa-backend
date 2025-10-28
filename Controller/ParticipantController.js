@@ -5,7 +5,7 @@ const Category = require("../Model/CategoryModel");
 
 const participantData = async (req, res) => {
     try {
-        // console.log("Received Data:", req.body);
+        console.log("Received Data:", req.body);
 
         const {
             fullName,
@@ -40,46 +40,62 @@ const participantData = async (req, res) => {
             await category.save();
         }
 
-        //  Subcategory logic
+        //  Restrict Female from Turban
+        if (gender.toLowerCase() === "female" && category.name.toLowerCase() === "turban") {
+            return res.status(400).json({
+                success: false,
+                message: "Females cannot register for the Turban category",
+            });
+        }
+
+        //  Age restrictions (check before subcategory creation)
+        const groupLower = group.toLowerCase();
+
+        // For ages 5-15: not eligible for Senior and Expert
+        if (age >= 5 && age <= 15 && (groupLower === "senior" || groupLower === "expert")) {
+            return res.status(400).json({
+                success: false,
+                message: "Participants aged 5-15 are not eligible for Senior and Expert groups",
+            });
+        }
+
+        // For ages 16+: not eligible for Junior
+        if (age >= 15 && groupLower === "junior") {
+            return res.status(400).json({
+                success: false,
+                message: "Participants aged 15+ are not eligible for Junior group",
+            });
+        }
+
+        //  Subcategory logic - FIXED QUERY
         let subcategoryQuery;
+        let subcategoryName;
+        let groupName;
 
         if (category.name.toLowerCase() === "dumala") {
+            // For dumala: group name format is "group - competition - gender"
+            subcategoryName = `${group.toLowerCase()} - ${category.name} - ${gender.toLowerCase() === "female" ? "Female" : "Male"}`;
+            groupName = subcategoryName;
+            
             subcategoryQuery = {
-                group: group - competition - gender,
+                name: subcategoryName,
                 categoryId: category._id
             };
         } else {
+            // For other categories: just use group name
+            subcategoryName = group;
+            groupName = group;
+            
             subcategoryQuery = {
-                group: group,
+                name: subcategoryName,
                 categoryId: category._id
             };
         }
 
-        if (category.name.toLowerCase() === "dumala") {
-            subcategoryQuery.gender = gender.toLowerCase();
-        }
-
+        // Find or create subcategory
         let subcategory = await Subcategory.findOne(subcategoryQuery);
 
         if (!subcategory) {
-            let subcategoryName;
-            let groupName;
-
-            if (category.name.toLowerCase() === "dumala") {
-                const categoryNameSafe = (category.name || '').toString();
-                const groupValue = group.toString();
-                if (gender.toLowerCase() === "female") {
-                    subcategoryName = `${groupValue} - ${categoryNameSafe} - Female`;
-                    groupName = `${groupValue} - ${categoryNameSafe} - Female`;
-                } else {
-                    subcategoryName = `${groupValue} - ${categoryNameSafe} - Male`;
-                    groupName = `${groupValue} - ${categoryNameSafe} - Male`;
-                }
-            } else {
-                subcategoryName = group;
-                groupName = group;
-            }
-
             subcategory = new Subcategory({
                 name: subcategoryName,
                 categoryId: category._id,
@@ -90,32 +106,7 @@ const participantData = async (req, res) => {
             await subcategory.save();
         }
 
-        //  Restrict Female from Turban
-        if (gender.toLowerCase() === "female" && category.name.toLowerCase() === "turban") {
-            return res.status(400).json({
-                success: false,
-                message: "Females cannot register for the Turban category",
-            });
-        }
-
-        //  Age restrictions
-        const subcategoryGroup = subcategory.group.toLowerCase();
-
-        if (age >= 5 && age <= 15 && (subcategoryGroup === "senior" || subcategoryGroup === "expert")) {
-            return res.status(400).json({
-                success: false,
-                message: "Participants aged 8–15 are not eligible for Senior and Expert groups",
-            });
-        }
-
-        if (age >= 16 && subcategoryGroup === "junior") {
-            return res.status(400).json({
-                success: false,
-                message: "Participants aged 15+ are not eligible for Junior group",
-            });
-        }
-
-        //  Token generation
+        //  Token generation - FIXED ORDER (Letter + Number)
         const firstLetterOfCategory = category.name.charAt(0).toUpperCase();
         const firstLetterOfSubcategory = subcategory.group.charAt(0).toUpperCase();
 
@@ -134,7 +125,8 @@ const participantData = async (req, res) => {
             counter.count++;
         }
 
-        const participantId = counter.count + firstLetterOfCategory + firstLetterOfSubcategory;
+        // Token format: FirstLetterCategory + FirstLetterSubcategory + Count
+        const participantId = counter.count + firstLetterOfCategory + firstLetterOfSubcategory ;
 
         const newParticipant = new Participant({
             tokenNumber: participantId,
@@ -162,7 +154,7 @@ const participantData = async (req, res) => {
             participant: newParticipant,
         });
     } catch (error) {
-        // console.error("Error registering participant:", error);
+        console.log("Error registering participant:", error);
         res.status(500).json({
             success: false,
             message: "Internal server error",
