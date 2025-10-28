@@ -30,7 +30,7 @@ const participantData = async (req, res) => {
             });
         }
 
-        // ✅ Ensure Category exists (create if not found)
+        //  Ensure Category exists
         let category = await Category.findOne({
             name: competition.toLowerCase(),
         });
@@ -40,70 +40,85 @@ const participantData = async (req, res) => {
             await category.save();
         }
 
-        let subcategory = await Subcategory.findOne({
-            group: group,
-            categoryId: category._id
-        });
+        //  Subcategory logic
+        let subcategoryQuery;
+
+        if (category.name.toLowerCase() === "dumala") {
+            subcategoryQuery = {
+                group: group - competition - gender,
+                categoryId: category._id
+            };
+        } else {
+            subcategoryQuery = {
+                group: group,
+                categoryId: category._id
+            };
+        }
+
+        if (category.name.toLowerCase() === "dumala") {
+            subcategoryQuery.gender = gender.toLowerCase();
+        }
+
+        let subcategory = await Subcategory.findOne(subcategoryQuery);
 
         if (!subcategory) {
-            // Apply unique name logic ONLY for Dumala
             let subcategoryName;
+            let groupName;
 
             if (category.name.toLowerCase() === "dumala") {
-                // For dumala → make unique name like "junior - dumala"
                 const categoryNameSafe = (category.name || '').toString();
-                subcategoryName = `${group} - ${categoryNameSafe}`;
+                const groupValue = group.toString();
+                if (gender.toLowerCase() === "female") {
+                    subcategoryName = `${groupValue} - ${categoryNameSafe} - Female`;
+                    groupName = `${groupValue} - ${categoryNameSafe} - Female`;
+                } else {
+                    subcategoryName = `${groupValue} - ${categoryNameSafe} - Male`;
+                    groupName = `${groupValue} - ${categoryNameSafe} - Male`;
+                }
             } else {
-                // For all other categories → keep original style
                 subcategoryName = group;
+                groupName = group;
             }
 
             subcategory = new Subcategory({
                 name: subcategoryName,
                 categoryId: category._id,
-                group: group,
+                group: groupName,
+                ...(category.name.toLowerCase() === "dumala" && { gender: gender.toLowerCase() }),
             });
 
             await subcategory.save();
         }
 
-        // **Check Gender Restriction for Turban**
-        if (gender === "Female" && category.name.toLowerCase() === "turban") {
+        //  Restrict Female from Turban
+        if (gender.toLowerCase() === "female" && category.name.toLowerCase() === "turban") {
             return res.status(400).json({
                 success: false,
                 message: "Females cannot register for the Turban category",
             });
         }
 
-        // **Check Age Restrictions for Subcategories**
+        //  Age restrictions
         const subcategoryGroup = subcategory.group.toLowerCase();
-        console.log("subcategory", subcategoryGroup);
-        console.log("age", typeof age);
 
-        if (
-            age >= 5 &&
-            age <= 15 &&
-            (subcategoryGroup === "senior" || subcategoryGroup === "expert")
-        ) {
+        if (age >= 5 && age <= 15 && (subcategoryGroup === "senior" || subcategoryGroup === "expert")) {
             return res.status(400).json({
                 success: false,
-                message:
-                    "Participants aged 8-15 are not eligible for Senior and Expert groups",
+                message: "Participants aged 8–15 are not eligible for Senior and Expert groups",
             });
         }
 
-        if (age >= 16 && subcategoryGroup === "junior" ) {
+        if (age >= 16 && subcategoryGroup === "junior") {
             return res.status(400).json({
                 success: false,
                 message: "Participants aged 15+ are not eligible for Junior group",
             });
         }
-    
-        // Extract first letters for participant ID
+
+        //  Token generation
         const firstLetterOfCategory = category.name.charAt(0).toUpperCase();
         const firstLetterOfSubcategory = subcategory.group.charAt(0).toUpperCase();
 
-        // Manage Counter
         let counter = await Counter.findOne({
             categoryId: category._id,
             subcategoryId: subcategory._id,
@@ -119,11 +134,8 @@ const participantData = async (req, res) => {
             counter.count++;
         }
 
-        // Generate participant ID
-        const participantId =
-            counter.count + firstLetterOfCategory + firstLetterOfSubcategory;
+        const participantId = counter.count + firstLetterOfCategory + firstLetterOfSubcategory;
 
-        // Create participant entry
         const newParticipant = new Participant({
             tokenNumber: participantId,
             fullName,
@@ -151,12 +163,13 @@ const participantData = async (req, res) => {
         });
     } catch (error) {
         // console.error("Error registering participant:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
     }
 };
 
-// set the logic to fetch all participant details
-// Get All Participants
 const allParticipantDetails = async (req, res) => {
     try {
         const participants = await Participant.find();
