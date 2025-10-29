@@ -12,6 +12,7 @@ app.use(bodyParser.json());
 const allowedOrigins = [
     "https://dastar-e-khalsa.vercel.app",
     "http://localhost:5173",
+    "https://ap-dek.vercel.app"
 ];
 
 app.use(
